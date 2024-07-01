@@ -1,0 +1,6 @@
+[submodule "climateiq-frontend"]
+	path = climateiq-frontend
+	url = https://github.com/UrbanSystemsLab/climateiq-frontend.git
+[submodule "climateiq-cnn"]
+	path = climateiq-cnn
+	url = https://github.com/UrbanSystemsLab/climateiq-cnn.git

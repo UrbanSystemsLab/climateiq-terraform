@@ -8,19 +8,19 @@ data "archive_file" "source" {
 
   # Add main.py to the root of the zip file.
   source {
-    content  = file("{path.module}/../../../usl_pipeline/cloud_functions/main.py")
+    content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py")
     filename = "main.py"
   }
   # Add requirements.txt to the root of the zip file.
   source {
-    content  = file("{path.module}/../../../usl_pipeline/cloud_functions/requirements.txt")
+    content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt")
     filename = "requirements.txt"
   }
   # Add all the contents of usl_lib to a usl_lib directory inside the zip file.
   dynamic "source" {
-    for_each = fileset("{path.module}/../../../usl_pipeline/usl_lib/usl_lib/", "**/*.py")
+    for_each = fileset("{path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py")
     content {
-      content  = file("{path.module}/../../../usl_pipeline/usl_lib/usl_lib/${source.value}")
+      content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/${source.value}")
       filename = "usl_lib/${source.value}"
     }
   }

@@ -6,13 +6,18 @@
 
 From the root of this repository:
 ```bash
-cd terraform/dev
+git submodule init
+```
+
+From the root of this repository:
+```bash
+cd dev
 terraform init
 ```
 
 From the root of this repository:
 ```bash
-cd terraform/prod
+cd prod
 terraform init
 ```
 
@@ -22,14 +27,29 @@ You will need read & write permissions to the `climateiq-state` and
 is stored.
 
 ## Deployment
+
+The code for the Cloud Functions deployed by this
+Terraform are in the
+[climateiq-cnn](https://github.com/UrbanSystemsLab/climateiq-cnn) and
+[climateiq-frontend](https://github.com/UrbanSystemsLab/climateiq-frontend)
+repositories.
+They are included in this Terraform repository as
+[Git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
+Before deploying, you need to get the most recent version of the code from those
+repositories. To do so:
+
+```bash
+git submodule update --remote --init --recursive
+```
+
 To deploy to staging, from the root of this repository:
 ```bash
-cd terraform/dev
+cd dev
 terraform apply
 ```
 
 To deploy to production, perform the same steps but from the `prod` directory
 ```bash
-cd terraform/prod
+cd prod
 terraform apply
 ```

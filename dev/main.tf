@@ -16,6 +16,11 @@ module "data_pipeline" {
   bucket_prefix = "test-"
 }
 
+module "export_pipeline" {
+  source        = "../modules/export_pipeline"
+  bucket_prefix = "test-"
+}
+
 resource "google_storage_bucket" "tf_state" {
   name     = "test-climateiq-state"
   location = "us-west1"

@@ -27,7 +27,7 @@ data "archive_file" "source" {
 }
 
 resource "google_storage_bucket" "source" {
-  name     = "${var.bucket_prefix}climateiq-cloud-functions"
+  name     = "${var.bucket_prefix}climateiq-cnn-cloud-functions"
   location = var.bucket_region
 }
 

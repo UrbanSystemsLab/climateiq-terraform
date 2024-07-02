@@ -16,7 +16,7 @@ module "data_pipeline" {
   bucket_prefix = ""
 }
 
-module "data_pipeline" {
+module "export_pipeline" {
   source        = "../modules/export_pipeline"
   bucket_prefix = ""
 }

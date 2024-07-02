@@ -28,14 +28,14 @@ resource "google_project_iam_member" "trigger_export_receiving" {
   project    = data.google_project.project.project_id
   role       = "roles/eventarc.eventReceiver"
   member     = "serviceAccount:${google_service_account.trigger_export.email}"
-  depends_on = [google_project_iam_member.invoking]
+  depends_on = [google_project_iam_member.trigger_export_invoking]
 }
 
 resource "google_project_iam_member" "trigger_export_artifactregistry_reader" {
   project    = data.google_project.project.project_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.trigger_export.email}"
-  depends_on = [google_project_iam_member.event_receiving]
+  depends_on = [google_project_iam_member.trigger_export_receiving]
 }
 
 # Give read access to the predictions bucket.

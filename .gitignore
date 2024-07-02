@@ -3,3 +3,4 @@
 terraform.tfstate
 terraform.tfstate.backup
 modules/data_pipeline/files/
+modules/export_pipeline/files/

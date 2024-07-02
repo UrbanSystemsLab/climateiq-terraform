@@ -10,6 +10,12 @@ resource "google_storage_bucket" "chunk_predictions" {
   location = var.bucket_region
 }
 
+# Pub/sub topic for triggering subsequent steps in export pipeline.
+resource "google_pubsub_topic" "export_predictions_topic" {
+  name = "climateiq-spatialize-and-export-predictions"
+  message_retention_duration = "86600s"  # 24 hours
+}
+
 # Create a service account used by the function and Eventarc trigger
 resource "google_service_account" "trigger_export" {
   account_id   = "gcf-trigger-export-sa"
@@ -38,6 +44,12 @@ resource "google_project_iam_member" "trigger_export_artifactregistry_reader" {
   depends_on = [google_project_iam_member.trigger_export_receiving]
 }
 
+resource "google_project_iam_member" "trigger_export_publishing" {
+  project = data.google_project.project.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${google_service_account.trigger_export.email}"
+}
+
 # Give read access to the predictions bucket.
 resource "google_storage_bucket_iam_member" "trigger_export_predictions_reader" {
   bucket = google_storage_bucket.predictions.name
@@ -50,13 +62,6 @@ resource "google_storage_bucket_iam_member" "trigger_export_chunk_predictions_wr
   bucket = google_storage_bucket.chunk_predictions.name
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.trigger_export.email}"
-}
-
-# Give read access to firestore.
-resource "google_project_iam_member" "trigger_export_firestore_reader" {
-  project = data.google_project.project.project_id
-  role    = "roles/datastore.viewer"
-  member  = "serviceAccount:${google_service_account.trigger_export.email}"
 }
 
 # Place the source code for the cloud function into a GCS bucket.

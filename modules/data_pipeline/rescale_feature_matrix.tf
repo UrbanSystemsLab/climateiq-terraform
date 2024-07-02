@@ -1,11 +1,8 @@
-resource "google_storage_bucket" "rescaler_features" {
-  name     = "${var.bucket_prefix}climateiq-study-area-feature-chunks"
-  location = var.bucket_region
-}
+# [resource "google_storage_bucket" "features"] is declared in another script and reused here.
 
 # Create a service account used by the function and Eventarc trigger
 resource "google_service_account" "rescale_feature_matrix" {
-  account_id   = "gcf-sa"
+  account_id   = "gcf-feature-matrix-rescaler-sa"
   display_name = "rescale-feature-matrix cloud function service account"
 }
 
@@ -33,13 +30,13 @@ resource "google_project_iam_member" "rescaler_artifactregistry_reader" {
 
 # Give read and write access to the features buckets.
 resource "google_storage_bucket_iam_member" "rescaler_features_reader" {
-  bucket = google_storage_bucket.rescaler_features.name
+  bucket = google_storage_bucket.features.name
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_service_account.rescale_feature_matrix.email}"
 }
 
 resource "google_storage_bucket_iam_member" "rescaler_features_writer" {
-  bucket = google_storage_bucket.rescaler_features.name
+  bucket = google_storage_bucket.features.name
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.rescale_feature_matrix.email}"
 }
@@ -66,7 +63,7 @@ resource "google_cloudfunctions2_function" "rescaler_features_writes" {
 
   name        = "rescale-feature-matrix"
   description = "Create a scaled feature matrix from uploaded unscaled feature matrix files."
-  location    = lower(google_storage_bucket.rescaler_features.location) # The trigger must be in the same location as the bucket
+  location    = lower(google_storage_bucket.features.location) # The trigger must be in the same location as the bucket
 
   build_config {
     runtime     = "python311"
@@ -89,13 +86,13 @@ resource "google_cloudfunctions2_function" "rescaler_features_writes" {
   }
 
   event_trigger {
-    trigger_region        = lower(google_storage_bucket.rescaler_features.location) # The trigger must be in the same location as the bucket
+    trigger_region        = lower(google_storage_bucket.features.location) # The trigger must be in the same location as the bucket
     event_type            = "google.cloud.storage.object.v1.finalized"
     retry_policy          = "RETRY_POLICY_RETRY"
     service_account_email = google_service_account.rescale_feature_matrix.email
     event_filters {
       attribute = "bucket"
-      value     = google_storage_bucket.rescaler_features.name
+      value     = google_storage_bucket.features.name
     }
   }
 

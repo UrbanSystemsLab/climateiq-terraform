@@ -1,16 +1,16 @@
-# Bucket for predictions input.
+# Create bucket for predictions input.
 resource "google_storage_bucket" "predictions" {
   name     = "${var.bucket_prefix}climateiq-predictions"
   location = var.bucket_region
 }
 
-# Bucket for split chunk predictions output.
+# Create bucket for split chunk predictions output.
 resource "google_storage_bucket" "chunk_predictions" {
   name     = "${var.bucket_prefix}climateiq-chunk-predictions"
   location = var.bucket_region
 }
 
-# Pub/sub topic for triggering subsequent steps in export pipeline.
+# Register a Pub/Sub topic for triggering subsequent steps in export pipeline.
 resource "google_pubsub_topic" "export_predictions_topic" {
   name = "climateiq-spatialize-and-export-predictions"
   message_retention_duration = "86600s"  # 24 hours
@@ -44,6 +44,7 @@ resource "google_project_iam_member" "trigger_export_artifactregistry_reader" {
   depends_on = [google_project_iam_member.trigger_export_receiving]
 }
 
+# Grant permissions for the cloud function to publish messages to the Pub/Sub topic.
 resource "google_project_iam_member" "trigger_export_publishing" {
   project = data.google_project.project.project_id
   role    = "roles/pubsub.publisher"

@@ -49,6 +49,7 @@ resource "google_project_iam_member" "trigger_export_publishing" {
   project = data.google_project.project.project_id
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.trigger_export.email}"
+  depends_on = [google_pubsub_topic.export_predictions_topic]
 }
 
 # Give read access to the predictions bucket.

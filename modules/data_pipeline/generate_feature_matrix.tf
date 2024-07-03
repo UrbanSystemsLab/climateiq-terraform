@@ -78,7 +78,7 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
     entry_point = "build_feature_matrix"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

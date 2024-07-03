@@ -81,7 +81,7 @@ resource "google_cloudfunctions2_function" "labels_processor" {
     entry_point = "process_citycat_outputs"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

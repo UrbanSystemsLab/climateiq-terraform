@@ -70,7 +70,7 @@ resource "google_cloudfunctions2_function" "rescaler_features_writes" {
     entry_point = "rescale_feature_matrices"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

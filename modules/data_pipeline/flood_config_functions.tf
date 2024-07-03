@@ -74,7 +74,7 @@ resource "google_cloudfunctions2_function" "write_citycat_config" {
     entry_point = "write_flood_scenario_metadata_and_features"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }
@@ -123,7 +123,7 @@ resource "google_cloudfunctions2_function" "delete_citycat_config" {
     entry_point = "delete_flood_scenario_metadata"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

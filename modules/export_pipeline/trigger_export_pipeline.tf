@@ -85,7 +85,7 @@ data "archive_file" "source" {
 
 resource "google_storage_bucket_object" "source" {
   name   = basename(data.archive_file.source.output_path)
-  bucket = google_storage_bucket.source.name
+  bucket = var.source_code_bucket.name
   source = data.archive_file.source.output_path
 }
 
@@ -103,7 +103,7 @@ resource "google_cloudfunctions2_function" "trigger_export_function" {
     entry_point = "trigger_export_pipeline"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

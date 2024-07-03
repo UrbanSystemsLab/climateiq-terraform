@@ -1,3 +1,10 @@
+variable "source_code_bucket" {
+  type = object({
+    name      = string
+    location  = string
+  })
+}
+
 variable "bucket_prefix" {
   description = "Prefix to be appended to all GCS buckets."
   type        = string

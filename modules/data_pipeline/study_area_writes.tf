@@ -69,7 +69,7 @@ resource "google_cloudfunctions2_function" "study_area_write" {
     entry_point = "write_study_area_metadata"
     source {
       storage_source {
-        bucket = google_storage_bucket.source.name
+        bucket = var.source_code_bucket.name
         object = google_storage_bucket_object.source.name
       }
     }

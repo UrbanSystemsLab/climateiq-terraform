@@ -84,7 +84,7 @@ data "archive_file" "source" {
 }
 
 resource "google_storage_bucket_object" "source" {
-  name   = basename(data.archive_file.source.output_path)
+  name   = "frontend_trigger_export_cloud_function_source.zip"
   bucket = var.source_code_bucket.name
   source = data.archive_file.source.output_path
 }

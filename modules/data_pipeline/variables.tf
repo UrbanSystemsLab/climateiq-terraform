@@ -1,4 +1,5 @@
 variable "source_code_bucket" {
+  description = "GCS bucket containing source code for all cloud functions."
   type = object({
     name      = string
     location  = string

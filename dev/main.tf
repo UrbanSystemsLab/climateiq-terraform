@@ -12,19 +12,21 @@ provider "google" {
 }
 
 module "data_pipeline" {
-  source        = "../modules/data_pipeline"
-  bucket_prefix = "test-"
+  source         = "../modules/data_pipeline"
+  bucket_prefix  = "test-"
+  enable_retries = false
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }
 
 module "export_pipeline" {
-  source        = "../modules/export_pipeline"
-  bucket_prefix = "test-"
+  source         = "../modules/export_pipeline"
+  bucket_prefix  = "test-"
+  enable_retries = false
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }

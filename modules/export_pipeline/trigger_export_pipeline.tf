@@ -12,8 +12,8 @@ resource "google_storage_bucket" "chunk_predictions" {
 
 # Register a Pub/Sub topic for triggering subsequent steps in export pipeline.
 resource "google_pubsub_topic" "export_predictions_topic" {
-  name = "climateiq-spatialize-and-export-predictions"
-  message_retention_duration = "86600s"  # 24 hours
+  name                       = "climateiq-spatialize-and-export-predictions"
+  message_retention_duration = "86600s" # 24 hours
 }
 
 # Create a service account used by the function and Eventarc trigger
@@ -46,9 +46,9 @@ resource "google_project_iam_member" "trigger_export_artifactregistry_reader" {
 
 # Grant permissions for the cloud function to publish messages to the Pub/Sub topic.
 resource "google_project_iam_member" "trigger_export_publishing" {
-  project = data.google_project.project.project_id
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${google_service_account.trigger_export.email}"
+  project    = data.google_project.project.project_id
+  role       = "roles/pubsub.publisher"
+  member     = "serviceAccount:${google_service_account.trigger_export.email}"
   depends_on = [google_pubsub_topic.export_predictions_topic]
 }
 
@@ -95,8 +95,8 @@ resource "google_cloudfunctions2_function" "trigger_export_function" {
     google_project_iam_member.gcs_pubsub_publishing,
   ]
 
-  name        = "trigger-export-pipeline"
-  location    = lower(google_storage_bucket.predictions.location) # The trigger must be in the same location as the bucket
+  name     = "trigger-export-pipeline"
+  location = lower(google_storage_bucket.predictions.location) # The trigger must be in the same location as the bucket
 
   build_config {
     runtime     = "python311"
@@ -121,7 +121,7 @@ resource "google_cloudfunctions2_function" "trigger_export_function" {
   event_trigger {
     trigger_region        = lower(google_storage_bucket.predictions.location) # The trigger must be in the same location as the bucket
     event_type            = "google.cloud.storage.object.v1.finalized"
-    retry_policy          = "RETRY_POLICY_RETRY"
+    retry_policy          = var.enable_retries ? "RETRY_POLICY_RETRY" : "RETRY_POLICY_DO_NOT_RETRY"
     service_account_email = google_service_account.trigger_export.email
     event_filters {
       attribute = "bucket"

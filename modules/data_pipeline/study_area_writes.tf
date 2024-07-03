@@ -87,7 +87,7 @@ resource "google_cloudfunctions2_function" "study_area_write" {
   event_trigger {
     trigger_region        = lower(google_storage_bucket.study_areas.location) # The trigger must be in the same location as the bucket
     event_type            = "google.cloud.storage.object.v1.finalized"
-    retry_policy          = "RETRY_POLICY_RETRY"
+    retry_policy          = var.enable_retries ? "RETRY_POLICY_RETRY" : "RETRY_POLICY_DO_NOT_RETRY"
     service_account_email = google_service_account.study_area_writer.email
     event_filters {
       attribute = "bucket"

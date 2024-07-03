@@ -92,7 +92,7 @@ resource "google_cloudfunctions2_function" "write_citycat_config" {
   event_trigger {
     trigger_region        = lower(google_storage_bucket.city_cat_config.location) # The trigger must be in the same location as the bucket
     event_type            = "google.cloud.storage.object.v1.finalized"
-    retry_policy          = "RETRY_POLICY_RETRY"
+    retry_policy          = var.enable_retries ? "RETRY_POLICY_RETRY" : "RETRY_POLICY_DO_NOT_RETRY"
     service_account_email = google_service_account.city_cat_config.email
     event_filters {
       attribute = "bucket"
@@ -141,7 +141,7 @@ resource "google_cloudfunctions2_function" "delete_citycat_config" {
   event_trigger {
     trigger_region        = lower(google_storage_bucket.city_cat_config.location) # The trigger must be in the same location as the bucket
     event_type            = "google.cloud.storage.object.v1.deleted"
-    retry_policy          = "RETRY_POLICY_RETRY"
+    retry_policy          = var.enable_retries ? "RETRY_POLICY_RETRY" : "RETRY_POLICY_DO_NOT_RETRY"
     service_account_email = google_service_account.city_cat_config.email
     event_filters {
       attribute = "bucket"

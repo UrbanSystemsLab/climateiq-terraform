@@ -35,7 +35,7 @@ resource "google_project_iam_member" "spatialize_chunk_predictions_artifactregis
 # Give read access to Firestore.
 resource "google_project_iam_member" "spatialize_chunk_predictions_firestore_reader" {
   project = data.google_project.project.project_id
-  role    = "roles/datastore.reader"
+  role    = "roles/datastore.viewer"
   member = "serviceAccount:${google_service_account.spatialize_chunk_predictions.email}"
 }
 
@@ -102,7 +102,7 @@ resource "google_cloudfunctions2_function" "spatialize_chunk_predictions_functio
   }
 
   event_trigger {
-    event_type        = "google.pubsub.topic.publish"
+    event_type        = "google.cloud.pubsub.topic.v1.messagePublished"
     pubsub_topic     = google_pubsub_topic.export_predictions_topic.id
     retry_policy      = "RETRY_POLICY_RETRY"
     service_account_email = google_service_account.spatialize_chunk_predictions.email

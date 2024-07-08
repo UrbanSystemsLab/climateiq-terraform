@@ -56,7 +56,7 @@ resource "google_storage_bucket_iam_member" "spatialize_chunk_predictions_spatia
 # Place the source code for the cloud function into a GCS bucket.
 data "archive_file" "spatialize_chunk_predictions_source" {
   type        = "zip"
-  output_path = "${path.module}/files/cloud_function_source.zip"
+  output_path = "${path.module}/files/spatialize_chunk_predictions/cloud_function_source.zip"
 
   # Add main.py to the root of the zip file.
   source {

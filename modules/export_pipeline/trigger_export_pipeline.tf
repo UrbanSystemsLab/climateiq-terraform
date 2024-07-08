@@ -69,7 +69,7 @@ resource "google_storage_bucket_iam_member" "trigger_export_chunk_predictions_wr
 # Place the source code for the cloud function into a GCS bucket.
 data "archive_file" "trigger_export_source" {
   type        = "zip"
-  output_path = "${path.module}/files/cloud_function_source.zip"
+  output_path = "${path.module}/files/trigger_export/cloud_function_source.zip"
 
   # Add main.py to the root of the zip file.
   source {

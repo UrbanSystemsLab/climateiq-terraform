@@ -67,7 +67,7 @@ resource "google_storage_bucket_iam_member" "trigger_export_chunk_predictions_wr
 }
 
 # Place the source code for the cloud function into a GCS bucket.
-data "archive_file" "source" {
+data "archive_file" "trigger_export_source" {
   type        = "zip"
   output_path = "${path.module}/files/cloud_function_source.zip"
 
@@ -83,10 +83,10 @@ data "archive_file" "source" {
   }
 }
 
-resource "google_storage_bucket_object" "source" {
+resource "google_storage_bucket_object" "trigger_export_source" {
   name   = "frontend_trigger_export_cloud_function_source.zip"
   bucket = var.source_code_bucket.name
-  source = data.archive_file.source.output_path
+  source = data.archive_file.trigger_export_source.output_path
 }
 
 # Create a function triggered by writes to the predictions bucket.
@@ -104,7 +104,7 @@ resource "google_cloudfunctions2_function" "trigger_export_function" {
     source {
       storage_source {
         bucket = var.source_code_bucket.name
-        object = google_storage_bucket_object.source.name
+        object = google_storage_bucket_object.trigger_export_source.name
       }
     }
   }
@@ -131,7 +131,7 @@ resource "google_cloudfunctions2_function" "trigger_export_function" {
 
   lifecycle {
     replace_triggered_by = [
-      google_storage_bucket_object.source
+      google_storage_bucket_object.trigger_export_source
     ]
   }
 }

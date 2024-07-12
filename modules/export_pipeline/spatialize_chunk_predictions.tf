@@ -83,7 +83,7 @@ resource "google_cloudfunctions2_function" "spatialize_chunk_predictions_functio
 
   build_config {
     runtime     = "python311"
-    entry_point = "subscribe"
+    entry_point = "spatialize_chunk_predictions"
     source {
       storage_source {
         bucket = var.source_code_bucket.name

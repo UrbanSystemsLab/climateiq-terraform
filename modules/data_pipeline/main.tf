@@ -11,6 +11,16 @@ data "archive_file" "source" {
     content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py")
     filename = "main.py"
   }
+  # Add all the contents of cloud_functions/wheels to a /wheels directory inside the zip file.
+  # Currently, we have only one wheel (for wrf-python) - to future proof in case we introduce
+  # more wheels, we'll import the files in a for loop
+  dynamic "source" {
+    for_each = fileset("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl")
+    content {
+      content  = filebase64("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/${source.value}")
+      filename = "wheels/${source.value}"
+    }
+  }
   # Add requirements.txt to the root of the zip file.
   source {
     content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt")

@@ -26,15 +26,6 @@ You will need read & write permissions to the `climateiq-state` and
 [Terraform state](https://developer.hashicorp.com/terraform/language/state)
 is stored.
 
-### Troubleshooting
-#### `invalid_grant` or `reauth related error (invalid_rapt)` error
-"invalid_grant" error in Terraform when trying to access your Cloud Storage backend usually points to an issue with your authentication credentials and permissions. To fix this, reauthenticate your Google Cloud SDK by running:
-```bash
-gcloud auth application-default login
-```
-This will open a browser window for you to log in and refresh your credentials.
-
-
 ## Deployment
 
 The code for the Cloud Functions deployed by this

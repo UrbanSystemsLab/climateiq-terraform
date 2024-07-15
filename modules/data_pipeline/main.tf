@@ -29,7 +29,7 @@ resource "local_file" "to_temp_dir_root" {
   content  = file(element(data.template_file.t_file.*.rendered, count.index))
 }
 
-# Copy /wheels files to temp directoryg
+# Copy /wheels files to temp directory
 resource "local_file" "to_temp_dir_wheels" {
   count = "${length(local.wheels_source_files)}"
 
@@ -38,7 +38,7 @@ resource "local_file" "to_temp_dir_wheels" {
   content_base64 = filebase64("${local.wheels_dir}${element(local.wheels_source_files, count.index)}")
 }
 
-# Process /usl_lib files
+# Copy /url_lib files to temp directory
 resource "local_file" "to_temp_dir_usl_lib" {
   count = length(local.usl_lib_source_files)
 

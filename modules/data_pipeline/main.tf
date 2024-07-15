@@ -1,29 +1,54 @@
 data "google_project" "project" {
 }
 
+locals {
+  source_files = concat(
+    # Add paths to files from /cloud_functions's root
+    [
+      "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py",
+      "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt"
+    ],
+    # Add paths to all .py files from /usl_lib subdirectory
+    tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py")),
+    # Add paths to all .whl files from /cloud_functions's /wheels subdirectory
+    tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
+  )
+
+  usl_lib_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/"
+  wheels_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
+}
+
+# Read and process the content from source_files
+data "template_file" "t_file" {
+  count = "${length(local.source_files)}"
+  template = element(local.source_files, count.index)
+}
+
+# Copy files to a temporary directory to prep for zip
+resource "local_file" "to_temp_dir" {
+  count    = "${length(local.source_files)}"
+
+  # Filenames are constructed to preserve source subdirectory structure within /temp
+  filename = "${path.module}/temp/${
+    contains(fileset(local.usl_lib_dir, "**/"), element(local.source_files, count.index)) ?        
+      "usl_lib/${element(local.source_files, count.index)}" : 
+    contains(fileset(local.wheels_dir, "*"), element(local.source_files, count.index)) ? 
+      "wheels/${element(local.source_files, count.index)}" :
+    basename(element(local.source_files, count.index))
+  }"
+
+  content  = "${element(data.template_file.t_file.*.rendered, count.index)}"
+}
+
 # Place the source code for the cloud function into a GCS bucket.
 data "archive_file" "source" {
   type        = "zip"
   output_path = "${path.module}/files/cloud_function_source.zip"
+  source_dir  = "${path.module}/temp"
 
-  # Add main.py to the root of the zip file.
-  source {
-    content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py")
-    filename = "main.py"
-  }
-  # Add requirements.txt to the root of the zip file.
-  source {
-    content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt")
-    filename = "requirements.txt"
-  }
-  # Add all the contents of usl_lib to a usl_lib directory inside the zip file.
-  dynamic "source" {
-    for_each = fileset("{path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py")
-    content {
-      content  = file("{path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/${source.value}")
-      filename = "usl_lib/${source.value}"
-    }
-  }
+  depends_on = [
+    local_file.to_temp_dir,
+  ]
 }
 
 resource "google_storage_bucket_object" "source" {

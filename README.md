@@ -28,7 +28,9 @@ is stored.
 
 ### Troubleshooting
 #### `invalid_grant` or `reauth related error (invalid_rapt)` error
-"invalid_grant" error in Terraform when trying to access your Cloud Storage backend usually points to an issue with your authentication credentials and permissions. To fix this, reauthenticate your Google Cloud SDK by running:
+"invalid_grant" error in Terraform when trying to access your Cloud Storage backend
+usually points to an issue with your authentication credentials and permissions.
+To fix this, reauthenticate your Google Cloud SDK by running:
 ```bash
 gcloud auth application-default login
 ```

@@ -42,7 +42,7 @@ resource "google_storage_bucket_iam_member" "wrf_study_area_chunk_uploader_outpu
 # Give write access to the study area chunks bucket
 # Study area bucket should be created in generate_feature_matrix.tf
 resource "google_storage_bucket_iam_member" "wrf_study_area_chunk_uploader_chunks_writer" {
-  bucket = "${var.bucket_prefix}climateiq-study-area-feature-chunks"
+  bucket = "${var.bucket_prefix}climateiq-study-area-chunks"
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.wrf_study_area_chunk_uploader.email}"
 }

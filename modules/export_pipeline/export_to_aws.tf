@@ -33,10 +33,10 @@ resource "google_project_iam_member" "export_to_aws_secret_manager_access" {
   member  = "serviceAccount:${google_service_account.export_to_aws.email}"
 }
 
-# Give read access to the spatialized merged predictions bucket.
-resource "google_storage_bucket_iam_member" "export_to_aws_spatialized_merged_predictions_reader" {
-  bucket = google_storage_bucket.spatialized_chunk_predictions.name
-  role   = "roles/storage.objectViewer"
+# Give read/write access to the spatialized merged predictions bucket.
+resource "google_storage_bucket_iam_member" "export_to_aws_spatialized_merged_predictions_user" {
+  bucket = google_storage_bucket.spatialized_merged_predictions.name
+  role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.export_to_aws.email}"
 }
 

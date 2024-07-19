@@ -26,7 +26,7 @@ resource "google_project_iam_member" "export_to_aws_artifactregistry_reader" {
   depends_on = [google_project_iam_member.export_to_aws_receiving]
 }
 
-# Grant your cloud function's service account access to the Secret Manager secret
+# Grant access to Secret Manager
 resource "google_project_iam_member" "export_to_aws_secret_manager_access" {
   project = data.google_project.project.project_id
   role    = "roles/secretmanager.secretAccessor"

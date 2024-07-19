@@ -86,12 +86,14 @@ resource "google_cloudfunctions2_function" "export_to_aws_function" {
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix
     }
-    secret_environment_variables {  
-        key     = "climasens-aws-access-key-id"
-        secret  = "climasens-aws-access-key-id"
-        version = "latest"
+    secret_environment_variables { 
+      project_id = data.google_project.project.project_id
+      key     = "climasens-aws-access-key-id"
+      secret  = "climasens-aws-access-key-id"
+      version = "latest"
     }
     secret_environment_variables {  
+      project_id = data.google_project.project.project_id
       key     = "climasens-aws-secret-access-key"
       secret  = "climasens-aws-secret-access-key"
       version = "latest"

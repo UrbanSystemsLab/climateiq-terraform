@@ -2,14 +2,14 @@ data "google_project" "project" {
 }
 
 locals {
-  root_source_files =  [
-      "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py",
-      "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt"
+  root_source_files = [
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py",
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt"
   ]
-  wheels_source_files = tolist(fileset("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
+  wheels_source_files  = tolist(fileset("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
   usl_lib_source_files = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py"))
 
-  wheels_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
+  wheels_dir  = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
   usl_lib_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/"
 }
 
@@ -18,24 +18,24 @@ locals {
 # and make it available to use elsewhere in this file. This is necessary for files
 # defined in `locals` block that is not dynamically discovered (i.e. fileset()).
 data "template_file" "t_file" {
-  count = "${length(local.root_source_files)}"
-  template = "${element(local.root_source_files, count.index)}"
+  count    = length(local.root_source_files)
+  template = element(local.root_source_files, count.index)
 }
 
 resource "local_file" "to_temp_dir_root" {
-  count = "${length(local.root_source_files)}"
+  count = length(local.root_source_files)
 
   filename = "${path.module}/temp/${basename(element(local.root_source_files, count.index))}"
-  content  = file(element(data.template_file.t_file.*.rendered, count.index))
+  content  = sensitive(file(element(data.template_file.t_file.*.rendered, count.index)))
 }
 
 # Copy /wheels files to temp directory
 resource "local_file" "to_temp_dir_wheels" {
-  count = "${length(local.wheels_source_files)}"
+  count = length(local.wheels_source_files)
 
   filename = "${path.module}/temp/wheels/${basename(element(local.wheels_source_files, count.index))}"
   # Use base64 since wheel files are binary
-  content_base64 = filebase64("${local.wheels_dir}${element(local.wheels_source_files, count.index)}")
+  content_base64 = sensitive(filebase64("${local.wheels_dir}${element(local.wheels_source_files, count.index)}"))
 }
 
 # Copy /url_lib files to temp directory
@@ -43,7 +43,7 @@ resource "local_file" "to_temp_dir_usl_lib" {
   count = length(local.usl_lib_source_files)
 
   filename = "${path.module}/temp/usl_lib/${element(local.usl_lib_source_files, count.index)}"
-  content  = file("${local.usl_lib_dir}${element(local.usl_lib_source_files, count.index)}")
+  content  = sensitive(file("${local.usl_lib_dir}${element(local.usl_lib_source_files, count.index)}"))
 }
 
 # Place the source code for the cloud function into a GCS bucket.

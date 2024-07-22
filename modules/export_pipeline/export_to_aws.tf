@@ -26,9 +26,16 @@ resource "google_project_iam_member" "export_to_aws_artifactregistry_reader" {
   depends_on = [google_project_iam_member.export_to_aws_receiving]
 }
 
-# Grant access to Secret Manager
-resource "google_project_iam_member" "export_to_aws_secret_manager_access" {
-  project = data.google_project.project.project_id
+# Grant access to "climasens-aws-access-key-id" key
+resource "google_secret_manager_secret_iam_member" "export_to_aws_access_access_key_id" {
+  secret_id = "projects/${data.google_project.project.project_id}/secrets/climasens-aws-access-key-id"
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.export_to_aws.email}"
+}
+
+# Grant access to "climasens-aws-secret-access-key" key
+resource "google_secret_manager_secret_iam_member" "export_to_aws_access_secret_access_key" {
+  secret_id = "projects/${data.google_project.project.project_id}/secrets/climasens-aws-secret-access-key"
   role    = "roles/secretmanager.secretAccessor"
   member  = "serviceAccount:${google_service_account.export_to_aws.email}"
 }

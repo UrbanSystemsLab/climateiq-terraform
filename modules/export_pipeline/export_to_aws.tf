@@ -88,7 +88,7 @@ resource "google_cloudfunctions2_function" "export_to_aws_function" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 540
+    timeout_seconds       = 3600
     service_account_email = google_service_account.export_to_aws.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

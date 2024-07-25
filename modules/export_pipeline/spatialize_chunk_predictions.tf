@@ -93,8 +93,9 @@ resource "google_cloudfunctions2_function" "spatialize_chunk_predictions_functio
   }
 
   service_config {
-    available_memory    = "4Gi"
+    available_memory    = "32Gi"
     timeout_seconds    = 540
+    max_instance_count = 3000 // (~600 chunks x 4 scenarios)
     service_account_email = google_service_account.spatialize_chunk_predictions.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

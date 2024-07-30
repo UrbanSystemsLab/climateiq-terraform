@@ -1,4 +1,4 @@
-# Bucket for raw WRF simlulation output.
+# Bucket for raw WRF simulation output.
 resource "google_storage_bucket" "raw_wrf_outputs" {
   name     = "${var.bucket_prefix}climateiq-atmospheric-simulation-output"
   location = var.bucket_region
@@ -32,7 +32,7 @@ resource "google_project_iam_member" "wrf_labels_artifactregistry_reader" {
   depends_on = [google_project_iam_member.event_receiving]
 }
 
-# Give read & write access to the raw citycat bucket.
+# Give read & write access to the raw output bucket.
 resource "google_storage_bucket_iam_member" "wrf_labels_reader" {
   bucket = google_storage_bucket.raw_wrf_outputs.name
   role   = "roles/storage.objectUser"
@@ -40,7 +40,6 @@ resource "google_storage_bucket_iam_member" "wrf_labels_reader" {
 }
 
 # Give write access to the processed labels bucket.
-# Label chunks bucket created by process_city_cat.tf
 resource "google_storage_bucket_iam_member" "wrf_processed_labels_writer" {
   bucket = "${var.bucket_prefix}climateiq-study-area-label-chunks"
   role   = "roles/storage.objectUser"
@@ -61,7 +60,7 @@ resource "google_project_iam_member" "wrf_labels_firestore_writer" {
   member  = "serviceAccount:${google_service_account.wrf_labels.email}"
 }
 
-# Create a function triggered by writes to the citycat config bucket.
+# Create a function triggered by writes to the wrf outputs bucket.
 resource "google_cloudfunctions2_function" "build_wrf_label_matrix" {
   depends_on = [
     google_project_iam_member.gcs_pubsub_publishing,
@@ -69,7 +68,7 @@ resource "google_cloudfunctions2_function" "build_wrf_label_matrix" {
 
   name        = "build-wrf-label-matrix"
   description = "Processes WRF outputs and builds wrf label matrix"
-  location    = lower(google_storage_bucket.raw_labels.location) # The trigger must be in the same location as the bucket
+  location    = lower(google_storage_bucket.raw_wrf_outputs.location) # The trigger must be in the same location as the bucket
 
   build_config {
     runtime     = "python311"

@@ -4,26 +4,24 @@ resource "google_service_account" "export_to_aws" {
   display_name = "Used By Export To AWS Cloud Function"
 }
 
-# Grant permissions needed for the cloud function to run and receive event triggers.
+# Grant permissions needed for the cloud function to run.
 resource "google_project_iam_member" "export_to_aws_invoking" {
   project    = data.google_project.project.project_id
   role       = "roles/run.invoker"
   member     = "serviceAccount:${google_service_account.export_to_aws.email}"
-  depends_on = [google_project_iam_member.gcs_pubsub_publishing]
 }
 
 resource "google_project_iam_member" "export_to_aws_receiving" {
   project    = data.google_project.project.project_id
   role       = "roles/eventarc.eventReceiver"
   member     = "serviceAccount:${google_service_account.export_to_aws.email}"
-  depends_on = [google_project_iam_member.export_to_aws_invoking]
+  depends_on = [google_project_service.eventarc]
 }
 
 resource "google_project_iam_member" "export_to_aws_artifactregistry_reader" {
   project    = data.google_project.project.project_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.export_to_aws.email}"
-  depends_on = [google_project_iam_member.export_to_aws_receiving]
 }
 
 # Grant access to "climasens-aws-access-key-id" key
@@ -91,15 +89,16 @@ resource "google_cloudfunctions2_function" "export_to_aws_function" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.export_to_aws.email
     environment_variables = {
-      BUCKET_PREFIX = var.bucket_prefix
+      BUCKET_PREFIX    = var.bucket_prefix
+      LOG_EXECUTION_ID = true
     }
-    secret_environment_variables { 
+    secret_environment_variables {
       project_id = data.google_project.project.project_id
       key     = "climasens-aws-access-key-id"
       secret  = "climasens-aws-access-key-id"
       version = "latest"
     }
-    secret_environment_variables {  
+    secret_environment_variables {
       project_id = data.google_project.project.project_id
       key     = "climasens-aws-secret-access-key"
       secret  = "climasens-aws-secret-access-key"

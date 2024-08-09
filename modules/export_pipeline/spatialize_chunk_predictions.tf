@@ -15,21 +15,18 @@ resource "google_project_iam_member" "spatialize_chunk_predictions_invoking" {
   project    = data.google_project.project.project_id
   role       = "roles/run.invoker"
   member     = "serviceAccount:${google_service_account.spatialize_chunk_predictions.email}"
-  depends_on = [google_project_iam_member.gcs_pubsub_publishing]
 }
 
 resource "google_project_iam_member" "spatialize_chunk_predictions_receiving" {
   project    = data.google_project.project.project_id
   role       = "roles/eventarc.eventReceiver"
   member     = "serviceAccount:${google_service_account.spatialize_chunk_predictions.email}"
-  depends_on = [google_project_iam_member.spatialize_chunk_predictions_invoking]
 }
 
 resource "google_project_iam_member" "spatialize_chunk_predictions_artifactregistry_reader" {
   project    = data.google_project.project.project_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.spatialize_chunk_predictions.email}"
-  depends_on = [google_project_iam_member.spatialize_chunk_predictions_receiving]
 }
 
 # Give read access to Firestore.
@@ -79,7 +76,7 @@ resource "google_storage_bucket_object" "spatialize_chunk_predictions_source" {
 # Create a function triggered by messages published to the "export_predictions_topic"
 resource "google_cloudfunctions2_function" "spatialize_chunk_predictions_function" {
   name        = "spatialize-chunk-predictions"
-  location    = lower(google_storage_bucket.predictions.location) 
+  location    = lower(google_storage_bucket.predictions.location)
 
   build_config {
     runtime     = "python311"
@@ -93,20 +90,14 @@ resource "google_cloudfunctions2_function" "spatialize_chunk_predictions_functio
   }
 
   service_config {
-    available_memory    = "32Gi"
-    timeout_seconds    = 540
-    max_instance_count = 1000
+    available_memory   = "32Gi"
+    timeout_seconds    = 1795
+    max_instance_count = 50
     service_account_email = google_service_account.spatialize_chunk_predictions.email
     environment_variables = {
-      BUCKET_PREFIX = var.bucket_prefix
+      BUCKET_PREFIX    = var.bucket_prefix
+      LOG_EXECUTION_ID = true
     }
-  }
-
-  event_trigger {
-    event_type        = "google.cloud.pubsub.topic.v1.messagePublished"
-    pubsub_topic     = google_pubsub_topic.export_predictions_topic.id
-    retry_policy      = "RETRY_POLICY_RETRY"
-    service_account_email = google_service_account.spatialize_chunk_predictions.email
   }
 
   lifecycle {

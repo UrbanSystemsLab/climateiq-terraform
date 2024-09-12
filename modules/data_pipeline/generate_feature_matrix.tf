@@ -112,7 +112,7 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
 }
 
 # Create a function triggered by writes to the chunks bucket.
-resource "google_cloudfunctions2_function" "chunk_writes" {
+resource "google_cloudfunctions2_function" "chunk_writes_http" {
   depends_on = [
     google_project_iam_member.gcs_pubsub_publishing,
   ]

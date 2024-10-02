@@ -123,7 +123,7 @@ resource "google_cloudfunctions2_function" "chunk_writes_http" {
 
   build_config {
     runtime     = "python311"
-    entry_point = "build_feature_matrix"
+    entry_point = "build_feature_matrix_http"
     source {
       storage_source {
         bucket = var.source_code_bucket.name
@@ -139,11 +139,5 @@ resource "google_cloudfunctions2_function" "chunk_writes_http" {
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix
     }
-  }
-
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.source
-    ]
   }
 }

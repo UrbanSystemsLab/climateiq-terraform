@@ -140,4 +140,10 @@ resource "google_cloudfunctions2_function" "chunk_writes_http" {
       BUCKET_PREFIX = var.bucket_prefix
     }
   }
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.source
+    ]
+  }
 }

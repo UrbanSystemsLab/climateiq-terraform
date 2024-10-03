@@ -138,4 +138,10 @@ resource "google_cloudfunctions2_function" "build_wrf_label_matrix_http" {
       BUCKET_PREFIX = var.bucket_prefix
     }
   }
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.source
+    ]
+  }
 }

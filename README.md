@@ -63,3 +63,11 @@ To deploy to production, perform the same steps but from the `prod` directory
 cd prod
 terraform apply
 ```
+
+## Cloud function testing
+
+The following command is an example testing the cloud functions via HTTP request.
+
+```sh
+gcloud functions call generate-feature-matrix-http --region us-central1 --data '{ "bucket": "test-climateiq-study-area-chunks", "name": "Test_NYC_Heat/Test_Config_Group/met_em.d03.2015-05-22_00:00:00.npy" }'
+```

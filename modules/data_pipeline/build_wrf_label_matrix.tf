@@ -107,3 +107,41 @@ resource "google_cloudfunctions2_function" "build_wrf_label_matrix" {
     ]
   }
 }
+
+
+# Create a function triggered by writes to the wrf outputs bucket.
+resource "google_cloudfunctions2_function" "build_wrf_label_matrix_http" {
+  depends_on = [
+    google_project_iam_member.gcs_pubsub_publishing,
+  ]
+
+  name        = "build-wrf-label-matrix-http"
+  description = "Processes WRF outputs and builds wrf label matrix"
+  location    = lower(google_storage_bucket.raw_wrf_outputs.location) # The trigger must be in the same location as the bucket
+
+  build_config {
+    runtime     = "python311"
+    entry_point = "build_wrf_label_matrix_http"
+    source {
+      storage_source {
+        bucket = var.source_code_bucket.name
+        object = google_storage_bucket_object.source.name
+      }
+    }
+  }
+
+  service_config {
+    available_memory      = "4Gi"
+    timeout_seconds       = 540
+    service_account_email = google_service_account.wrf_labels.email
+    environment_variables = {
+      BUCKET_PREFIX = var.bucket_prefix
+    }
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.source
+    ]
+  }
+}

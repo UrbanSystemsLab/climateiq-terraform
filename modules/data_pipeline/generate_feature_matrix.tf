@@ -86,7 +86,7 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 540  # 9 minutes - max that CF allows
+    timeout_seconds       = 900
     service_account_email = google_service_account.generate_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

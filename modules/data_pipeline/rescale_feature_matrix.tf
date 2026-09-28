@@ -78,7 +78,7 @@ resource "google_cloudfunctions2_function" "rescaler_features_writes" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 900
+    timeout_seconds       = 540
     service_account_email = google_service_account.rescale_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

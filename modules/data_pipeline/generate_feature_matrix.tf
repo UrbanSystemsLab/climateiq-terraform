@@ -102,13 +102,6 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
       attribute = "bucket"
       value     = google_storage_bucket.chunks.name
     }
-    # Heat only. Flood chunks are handled by flood_chunk_writes below; the two
-    # filters are disjoint so a chunk is never processed by both functions.
-    event_filters {
-      attribute = "name"
-      value     = "**/*.nc"
-      operator  = "match-path-pattern"
-    }
   }
 
   lifecycle {
@@ -140,8 +133,9 @@ resource "google_cloudfunctions2_function" "flood_chunk_writes" {
   }
 
   service_config {
-    available_memory      = "8Gi"
-    timeout_seconds       = 900 # Chunks measured at 45-53s; 60s dropped them silently
+    available_memory = "8Gi"
+    timeout_seconds  = 900
+    max_instance_count    = 50
     service_account_email = google_service_account.generate_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix
@@ -156,12 +150,6 @@ resource "google_cloudfunctions2_function" "flood_chunk_writes" {
     event_filters {
       attribute = "bucket"
       value     = google_storage_bucket.chunks.name
-    }
-    # Flood only; see the heat filter above.
-    event_filters {
-      attribute = "name"
-      value     = "**/*.tar"
-      operator  = "match-path-pattern"
     }
   }
 
@@ -195,7 +183,7 @@ resource "google_cloudfunctions2_function" "chunk_writes_http" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 540  # 9 minutes - max that CF allows
+    timeout_seconds       = 540
     service_account_email = google_service_account.generate_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

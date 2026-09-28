@@ -6,7 +6,7 @@ locals {
     "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py",
     "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt"
   ]
-  wheels_source_files  = tolist(fileset("{path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
+  wheels_source_files  = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
   usl_lib_source_files = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py"))
 
   wheels_dir  = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
@@ -14,19 +14,11 @@ locals {
 }
 
 # Process and copy files root cloud function files to temp directory.
-# A `template_file` data block is used here to first process each files content
-# and make it available to use elsewhere in this file. This is necessary for files
-# defined in `locals` block that is not dynamically discovered (i.e. fileset()).
-data "template_file" "t_file" {
-  count    = length(local.root_source_files)
-  template = element(local.root_source_files, count.index)
-}
-
 resource "local_file" "to_temp_dir_root" {
   count = length(local.root_source_files)
 
   filename = "${path.module}/temp/${basename(element(local.root_source_files, count.index))}"
-  content  = sensitive(file(element(data.template_file.t_file.*.rendered, count.index)))
+  content  = sensitive(file(element(local.root_source_files, count.index)))
 }
 
 # Copy /wheels files to temp directory

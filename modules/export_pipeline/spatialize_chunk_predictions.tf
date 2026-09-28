@@ -57,12 +57,12 @@ data "archive_file" "spatialize_chunk_predictions_source" {
 
   # Add main.py to the root of the zip file.
   source {
-    content  = file("{path.module}/../../climateiq-frontend/cloud_functions/climateiq_spatialize_chunk_predictions_cf/main.py")
+    content  = file("${path.module}/../../climateiq-frontend/cloud_functions/climateiq_spatialize_chunk_predictions_cf/main.py")
     filename = "main.py"
   }
   # Add requirements.txt to the root of the zip file.
   source {
-    content  = file("{path.module}/../../climateiq-frontend/cloud_functions/climateiq_spatialize_chunk_predictions_cf/requirements.txt")
+    content  = file("${path.module}/../../climateiq-frontend/cloud_functions/climateiq_spatialize_chunk_predictions_cf/requirements.txt")
     filename = "requirements.txt"
   }
 }

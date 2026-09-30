@@ -16,3 +16,13 @@ variable "bucket_region" {
   type        = string
   default     = "us-central1"
 }
+
+variable "h3_pipeline_bucket" {
+  description = "Name of the existing GCS bucket for H3 pipeline data."
+  type        = string
+}
+
+variable "predictions_bucket" {
+  description = "Name of the existing GCS bucket for flood predictions."
+  type        = string
+}

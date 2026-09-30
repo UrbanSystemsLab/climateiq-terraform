@@ -1,11 +1,9 @@
-resource "google_storage_bucket" "h3_pipeline" {
-  name     = "${var.bucket_prefix}climateiq-h3-pipeline"
-  location = var.bucket_region
+data "google_storage_bucket" "h3_pipeline" {
+  name = var.h3_pipeline_bucket
 }
 
-resource "google_storage_bucket" "predictions" {
-  name     = "${var.bucket_prefix}climateiq-predictions"
-  location = var.bucket_region
+data "google_storage_bucket" "predictions" {
+  name = var.predictions_bucket
 }
 
 resource "google_service_account" "h3_pipeline" {
@@ -41,13 +39,13 @@ resource "google_project_iam_member" "h3_pipeline_error_writer" {
 }
 
 resource "google_storage_bucket_iam_member" "h3_pipeline_bucket_user" {
-  bucket = google_storage_bucket.h3_pipeline.name
+  bucket = data.google_storage_bucket.h3_pipeline.name
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.h3_pipeline.email}"
 }
 
 resource "google_storage_bucket_iam_member" "h3_pipeline_predictions_reader" {
-  bucket = google_storage_bucket.predictions.name
+  bucket = data.google_storage_bucket.predictions.name
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_service_account.h3_pipeline.email}"
 }
@@ -74,7 +72,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = google_storage_bucket.h3_pipeline.name
+      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
     }
   }
 
@@ -92,7 +90,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
 
   name        = "h3-pipeline-tiff-trigger"
   description = "Triggers H3 pipeline when flood prediction mosaic TIFs are uploaded."
-  location    = lower(google_storage_bucket.predictions.location)
+  location    = lower(data.google_storage_bucket.predictions.location)
 
   build_config {
     runtime     = "python311"
@@ -111,18 +109,18 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = google_storage_bucket.h3_pipeline.name
+      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
     }
   }
 
   event_trigger {
-    trigger_region        = lower(google_storage_bucket.predictions.location)
+    trigger_region        = lower(data.google_storage_bucket.predictions.location)
     event_type            = "google.cloud.storage.object.v1.finalized"
     retry_policy          = "RETRY_POLICY_RETRY"
     service_account_email = google_service_account.h3_pipeline.email
     event_filters {
       attribute = "bucket"
-      value     = google_storage_bucket.predictions.name
+      value     = data.google_storage_bucket.predictions.name
     }
   }
 

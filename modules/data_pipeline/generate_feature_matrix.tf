@@ -70,12 +70,12 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
   ]
 
   name        = "generate-feature-matrix"
-  description = "Create a feature matrix from uploaded archives of geo files."
+  description = "Create heat (WRF) feature matrices from uploaded WPS output files."
   location    = lower(google_storage_bucket.chunks.location) # The trigger must be in the same location as the bucket
 
   build_config {
     runtime     = "python311"
-    entry_point = "build_feature_matrix"
+    entry_point = "build_heat_feature_matrix"
     source {
       storage_source {
         bucket = var.source_code_bucket.name
@@ -86,7 +86,56 @@ resource "google_cloudfunctions2_function" "chunk_writes" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 540  # 9 minutes - max that CF allows
+    timeout_seconds       = 540
+    service_account_email = google_service_account.generate_feature_matrix.email
+    environment_variables = {
+      BUCKET_PREFIX = var.bucket_prefix
+    }
+  }
+
+  event_trigger {
+    trigger_region        = lower(google_storage_bucket.chunks.location) # The trigger must be in the same location as the bucket
+    event_type            = "google.cloud.storage.object.v1.finalized"
+    retry_policy          = "RETRY_POLICY_RETRY"
+    service_account_email = google_service_account.generate_feature_matrix.email
+    event_filters {
+      attribute = "bucket"
+      value     = google_storage_bucket.chunks.name
+    }
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.source
+    ]
+  }
+}
+
+# Flood-only function triggered by chunk archive writes.
+resource "google_cloudfunctions2_function" "flood_chunk_writes" {
+  depends_on = [
+    google_project_iam_member.gcs_pubsub_publishing,
+  ]
+
+  name        = "generate-flood-feature-matrix"
+  description = "Create a flood (CityCat) feature matrix from uploaded chunk archives."
+  location    = lower(google_storage_bucket.chunks.location) # The trigger must be in the same location as the bucket
+
+  build_config {
+    runtime     = "python311"
+    entry_point = "build_flood_feature_matrix"
+    source {
+      storage_source {
+        bucket = var.source_code_bucket.name
+        object = google_storage_bucket_object.source.name
+      }
+    }
+  }
+
+  service_config {
+    available_memory      = "8Gi"
+    timeout_seconds       = 540
+    max_instance_count    = 50
     service_account_email = google_service_account.generate_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix
@@ -134,7 +183,7 @@ resource "google_cloudfunctions2_function" "chunk_writes_http" {
 
   service_config {
     available_memory      = "4Gi"
-    timeout_seconds       = 540  # 9 minutes - max that CF allows
+    timeout_seconds       = 540 # 9 minutes - max that CF allows
     service_account_email = google_service_account.generate_feature_matrix.email
     environment_variables = {
       BUCKET_PREFIX = var.bucket_prefix

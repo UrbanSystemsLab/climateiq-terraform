@@ -1,5 +1,6 @@
-data "google_storage_bucket" "h3_pipeline" {
-  name = var.h3_pipeline_bucket
+resource "google_storage_bucket" "h3_pipeline" {
+  name     = "${var.bucket_prefix}climateiq-h3-pipeline"
+  location = var.bucket_region
 }
 
 data "google_storage_bucket" "predictions" {
@@ -39,7 +40,7 @@ resource "google_project_iam_member" "h3_pipeline_error_writer" {
 }
 
 resource "google_storage_bucket_iam_member" "h3_pipeline_bucket_user" {
-  bucket = data.google_storage_bucket.h3_pipeline.name
+  bucket = google_storage_bucket.h3_pipeline.name
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.h3_pipeline.email}"
 }
@@ -72,7 +73,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
+      GCS_BUCKET = google_storage_bucket.h3_pipeline.name
     }
   }
 
@@ -109,7 +110,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
+      GCS_BUCKET = google_storage_bucket.h3_pipeline.name
     }
   }
 

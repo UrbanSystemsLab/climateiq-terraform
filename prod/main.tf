@@ -15,7 +15,7 @@ module "data_pipeline" {
   source        = "../modules/data_pipeline"
   bucket_prefix = ""
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }
@@ -24,7 +24,17 @@ module "export_pipeline" {
   source        = "../modules/export_pipeline"
   bucket_prefix = ""
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
+    location = google_storage_bucket.source.location
+  }
+}
+
+module "h3_pipeline" {
+  source             = "../modules/h3_pipeline"
+  h3_pipeline_bucket = "climateiq-h3-pipeline-1770319032"
+  predictions_bucket = "climateiq-predictions"
+  source_code_bucket = {
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }

@@ -15,7 +15,7 @@ module "data_pipeline" {
   source        = "../modules/data_pipeline"
   bucket_prefix = "test-"
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }
@@ -24,7 +24,7 @@ module "export_pipeline" {
   source        = "../modules/export_pipeline"
   bucket_prefix = "test-"
   source_code_bucket = {
-    name     = google_storage_bucket.source.name, 
+    name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location
   }
 }
@@ -51,4 +51,13 @@ terraform {
     bucket = "test-climateiq-state"
     prefix = "terraform/state"
   }
+}
+
+# Keyless deploy access for climateiq-cnn GitHub Actions (see modules/ci_deployer).
+module "ci_deployer" {
+  source                   = "../modules/ci_deployer"
+  github_repository        = "UrbanSystemsLab/climateiq-cnn"
+  runtime_service_accounts = module.data_pipeline.runtime_service_account_emails
+  # Add the add-area Cloud Run job's service account email here so CI can update the job.
+  extra_act_as_service_accounts = []
 }

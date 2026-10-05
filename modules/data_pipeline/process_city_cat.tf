@@ -108,8 +108,7 @@ resource "google_cloudfunctions2_function" "labels_processor" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.source]
   }
 }

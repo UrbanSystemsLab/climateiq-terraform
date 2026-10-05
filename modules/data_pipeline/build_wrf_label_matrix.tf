@@ -102,9 +102,8 @@ resource "google_cloudfunctions2_function" "build_wrf_label_matrix" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.source]
   }
 }
 
@@ -140,8 +139,7 @@ resource "google_cloudfunctions2_function" "build_wrf_label_matrix_http" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.source]
   }
 }

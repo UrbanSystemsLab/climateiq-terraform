@@ -52,13 +52,3 @@ terraform {
     prefix = "terraform/state"
   }
 }
-
-# Keyless deploy access for climateiq-cnn GitHub Actions (see modules/ci_deployer).
-module "ci_deployer" {
-  source                   = "../modules/ci_deployer"
-  github_repository        = "UrbanSystemsLab/climateiq-cnn"
-  runtime_service_accounts = module.data_pipeline.runtime_service_account_emails
-  allowed_refs             = ["refs/heads/release"]
-  # Add the add-area Cloud Run job's service account email here so CI can update the job.
-  extra_act_as_service_accounts = []
-}

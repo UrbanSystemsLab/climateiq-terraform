@@ -95,8 +95,7 @@ resource "google_cloudfunctions2_function" "write_wrf_heat_config" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.source]
   }
 }

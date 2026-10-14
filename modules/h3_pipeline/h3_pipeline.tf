@@ -77,9 +77,8 @@ resource "google_cloudfunctions2_function" "h3_pipeline" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.h3_source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.h3_source]
   }
 }
 
@@ -125,8 +124,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
   }
 
   lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.h3_source
-    ]
+    ignore_changes       = [build_config[0].source]
+    replace_triggered_by = [google_storage_bucket_object.h3_source]
   }
 }

@@ -12,6 +12,11 @@ variable "bucket_region" {
   default     = "us-central1"
 }
 
+variable "bucket_prefix" {
+  description = "Prefix to be appended to all GCS buckets."
+  type        = string
+}
+
 variable "h3_pipeline_bucket" {
   description = "Name of the existing GCS bucket for H3 pipeline data and admin boundaries."
   type        = string

@@ -72,7 +72,8 @@ resource "google_cloudfunctions2_function" "h3_pipeline" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
+      BUCKET_PREFIX = var.bucket_prefix
+      GCS_BUCKET    = data.google_storage_bucket.h3_pipeline.name
     }
   }
 
@@ -108,7 +109,8 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
     environment_variables = {
-      GCS_BUCKET = data.google_storage_bucket.h3_pipeline.name
+      BUCKET_PREFIX = var.bucket_prefix
+      GCS_BUCKET    = data.google_storage_bucket.h3_pipeline.name
     }
   }
 

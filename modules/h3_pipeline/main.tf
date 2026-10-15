@@ -2,7 +2,7 @@ data "google_project" "project" {
 }
 
 locals {
-  h3_source_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/h3_cloud_functions"
+  h3_source_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions"
 
   h3_root_source_files = [
     "${local.h3_source_dir}/main.py",

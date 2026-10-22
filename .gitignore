@@ -5,3 +5,5 @@ terraform.tfstate.backup
 modules/data_pipeline/temp/
 modules/data_pipeline/files/
 modules/export_pipeline/files/
+modules/h3_pipeline/temp/
+modules/h3_pipeline/files/

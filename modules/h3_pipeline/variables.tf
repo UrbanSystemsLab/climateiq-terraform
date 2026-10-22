@@ -26,3 +26,21 @@ variable "predictions_bucket" {
   description = "Name of the existing GCS bucket for flood predictions (created by export_pipeline)."
   type        = string
 }
+
+variable "h3_tiles_bucket" {
+  description = "Name of the existing GCS bucket whose H3 and admin GeoJSON is published as tilesets. Null disables tile publishing."
+  type        = string
+  default     = null
+}
+
+variable "mapbox_username" {
+  description = "Mapbox account that owns the published tilesets."
+  type        = string
+  default     = null
+}
+
+variable "mapbox_token_secret" {
+  description = "Existing Secret Manager secret holding the Mapbox access token."
+  type        = string
+  default     = "mapbox-access-token"
+}

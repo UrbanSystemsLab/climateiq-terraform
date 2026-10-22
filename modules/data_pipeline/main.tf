@@ -4,13 +4,19 @@ data "google_project" "project" {
 locals {
   root_source_files = [
     "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/main.py",
-    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt"
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/requirements.txt",
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/cities_config.yaml",
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/cli_unified_pipeline.py",
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/cli_add_admin_breadcrumbs.py",
+    "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/cli_preprocess_tiff_to_h3csv.py",
   ]
-  wheels_source_files  = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
-  usl_lib_source_files = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py"))
+  wheels_source_files   = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/", "*.whl"))
+  usl_lib_source_files  = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/", "**/*.py"))
+  h3_tools_source_files = tolist(fileset("${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/usl_h3_tools/", "**/*.py"))
 
-  wheels_dir  = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
-  usl_lib_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/"
+  wheels_dir   = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/wheels/"
+  usl_lib_dir  = "${path.module}/../../climateiq-cnn/usl_pipeline/usl_lib/usl_lib/"
+  h3_tools_dir = "${path.module}/../../climateiq-cnn/usl_pipeline/cloud_functions/usl_h3_tools/"
 }
 
 # Process and copy files root cloud function files to temp directory.
@@ -38,6 +44,14 @@ resource "local_file" "to_temp_dir_usl_lib" {
   content  = sensitive(file("${local.usl_lib_dir}${element(local.usl_lib_source_files, count.index)}"))
 }
 
+# Copy /usl_h3_tools files to temp directory
+resource "local_file" "to_temp_dir_h3_tools" {
+  count = length(local.h3_tools_source_files)
+
+  filename = "${path.module}/temp/usl_h3_tools/${element(local.h3_tools_source_files, count.index)}"
+  content  = sensitive(file("${local.h3_tools_dir}${element(local.h3_tools_source_files, count.index)}"))
+}
+
 # Place the source code for the cloud function into a GCS bucket.
 data "archive_file" "source" {
   type        = "zip"
@@ -48,6 +62,7 @@ data "archive_file" "source" {
     local_file.to_temp_dir_root,
     local_file.to_temp_dir_wheels,
     local_file.to_temp_dir_usl_lib,
+    local_file.to_temp_dir_h3_tools,
   ]
 }
 

@@ -14,6 +14,10 @@ locals {
   ]
   h3_tools_source_files = tolist(fileset("${local.h3_source_dir}/usl_h3_tools/", "**/*.py"))
   h3_tools_dir          = "${local.h3_source_dir}/usl_h3_tools/"
+  wheels_source_files   = tolist(fileset("${local.h3_source_dir}/wheels/", "*.whl"))
+  wheels_dir            = "${local.h3_source_dir}/wheels/"
+  usl_lib_source_files  = tolist(fileset("${local.h3_source_dir}/../usl_lib/usl_lib/", "**/*.py"))
+  usl_lib_dir           = "${local.h3_source_dir}/../usl_lib/usl_lib/"
 }
 
 resource "local_file" "h3_to_temp_dir_root" {
@@ -30,6 +34,20 @@ resource "local_file" "h3_to_temp_dir_tools" {
   content  = sensitive(file("${local.h3_tools_dir}${element(local.h3_tools_source_files, count.index)}"))
 }
 
+resource "local_file" "h3_to_temp_dir_wheels" {
+  count = length(local.wheels_source_files)
+
+  filename       = "${path.module}/temp/wheels/${basename(element(local.wheels_source_files, count.index))}"
+  content_base64 = sensitive(filebase64("${local.wheels_dir}${element(local.wheels_source_files, count.index)}"))
+}
+
+resource "local_file" "h3_to_temp_dir_usl_lib" {
+  count = length(local.usl_lib_source_files)
+
+  filename = "${path.module}/temp/usl_lib/${element(local.usl_lib_source_files, count.index)}"
+  content  = sensitive(file("${local.usl_lib_dir}${element(local.usl_lib_source_files, count.index)}"))
+}
+
 data "archive_file" "h3_source" {
   type        = "zip"
   output_path = "${path.module}/files/h3_cloud_function_source.zip"
@@ -38,6 +56,8 @@ data "archive_file" "h3_source" {
   depends_on = [
     local_file.h3_to_temp_dir_root,
     local_file.h3_to_temp_dir_tools,
+    local_file.h3_to_temp_dir_wheels,
+    local_file.h3_to_temp_dir_usl_lib,
   ]
 }
 

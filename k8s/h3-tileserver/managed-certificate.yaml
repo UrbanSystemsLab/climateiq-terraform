@@ -1,0 +1,11 @@
+# Apply after tilesdev.climateiq.org has an A record for
+# h3-tileserver-dev-static-ip, then uncomment the managed-certificates
+# annotation on h3-tileserver-ingress.
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: h3-tileserver-cert
+  namespace: tiles
+spec:
+  domains:
+    - tilesdev.climateiq.org

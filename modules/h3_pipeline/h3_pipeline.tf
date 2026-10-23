@@ -1,3 +1,14 @@
+locals {
+  # TILESERVER_BUCKET turns on the pipeline's PMTiles build.
+  h3_pipeline_env = {
+    for name, value in {
+      BUCKET_PREFIX     = var.bucket_prefix
+      GCS_BUCKET        = data.google_storage_bucket.h3_pipeline.name
+      TILESERVER_BUCKET = var.h3_tiles_bucket
+    } : name => value if value != null
+  }
+}
+
 data "google_storage_bucket" "h3_pipeline" {
   name = var.h3_pipeline_bucket
 }
@@ -71,10 +82,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline" {
     available_cpu         = "8"
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
-    environment_variables = {
-      BUCKET_PREFIX = var.bucket_prefix
-      GCS_BUCKET    = data.google_storage_bucket.h3_pipeline.name
-    }
+    environment_variables = local.h3_pipeline_env
   }
 
   lifecycle {
@@ -108,10 +116,7 @@ resource "google_cloudfunctions2_function" "h3_pipeline_tiff_trigger" {
     available_cpu         = "8"
     timeout_seconds       = 3600
     service_account_email = google_service_account.h3_pipeline.email
-    environment_variables = {
-      BUCKET_PREFIX = var.bucket_prefix
-      GCS_BUCKET    = data.google_storage_bucket.h3_pipeline.name
-    }
+    environment_variables = local.h3_pipeline_env
   }
 
   event_trigger {

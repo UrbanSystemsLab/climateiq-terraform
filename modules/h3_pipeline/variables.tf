@@ -44,3 +44,9 @@ variable "mapbox_token_secret" {
   type        = string
   default     = "mapbox-access-token"
 }
+
+variable "tileserver_readers" {
+  description = "IAM members that read the tiles bucket for tileserver-gl, such as its GKE Workload Identity principal."
+  type        = list(string)
+  default     = []
+}

@@ -7,11 +7,9 @@ data "google_storage_bucket" "h3_tiles" {
   name  = var.h3_tiles_bucket
 }
 
-resource "google_project_iam_member" "h3_pipeline_workflows_invoking" {
-  count   = local.tile_publish_count
-  project = data.google_project.project.project_id
-  role    = "roles/workflows.invoker"
-  member  = "serviceAccount:${google_service_account.h3_pipeline.email}"
+# Runs the trigger and the workflow.
+data "google_compute_default_service_account" "default" {
+  count = local.tile_publish_count
 }
 
 resource "google_storage_bucket_iam_member" "h3_pipeline_tiles_user" {
@@ -88,7 +86,7 @@ resource "google_workflows_workflow" "h3_tile_publish" {
   name            = "h3-tile-publish"
   region          = var.bucket_region
   description     = "Publishes a tileset when an H3 tiles bucket source is uploaded."
-  service_account = google_service_account.h3_pipeline.id
+  service_account = data.google_compute_default_service_account.default[0].email
   source_contents = <<-EOF
   main:
     params: [event]
@@ -175,12 +173,8 @@ EOF
 }
 
 resource "google_eventarc_trigger" "h3_tiles_finalized" {
-  count = local.tile_publish_count
-  depends_on = [
-    google_project_iam_member.gcs_pubsub_publishing,
-    google_project_iam_member.h3_pipeline_event_receiving,
-    google_project_iam_member.h3_pipeline_workflows_invoking,
-  ]
+  count      = local.tile_publish_count
+  depends_on = [google_project_iam_member.gcs_pubsub_publishing]
 
   name     = "h3-tiles-finalized"
   location = lower(data.google_storage_bucket.h3_tiles[0].location)
@@ -198,5 +192,5 @@ resource "google_eventarc_trigger" "h3_tiles_finalized" {
     workflow = google_workflows_workflow.h3_tile_publish[0].id
   }
 
-  service_account = google_service_account.h3_pipeline.id
+  service_account = data.google_compute_default_service_account.default[0].email
 }

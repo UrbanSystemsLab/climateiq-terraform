@@ -34,6 +34,11 @@ module "h3_pipeline" {
   bucket_prefix      = "test-"
   h3_pipeline_bucket = "climateiq-h3-pipeline-1770319032"
   predictions_bucket = "test-climateiq-predictions"
+  h3_tiles_bucket    = "climateiq-h3-tiles"
+  mapbox_username    = "timonm"
+  tileserver_readers = [
+    "principal://iam.googleapis.com/projects/772606599070/locations/global/workloadIdentityPools/climateiq.svc.id.goog/subject/ns/tiles/sa/h3-tileserver",
+  ]
   source_code_bucket = {
     name     = google_storage_bucket.source.name,
     location = google_storage_bucket.source.location

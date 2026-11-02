@@ -1,0 +1,122 @@
+# tileserver-gl on climateiq-dev-cluster (project climateiq), serving the
+# PMTiles under gs://climateiq-h3-tiles/tileserver/ behind its own Ingress and
+# global static IP h3-tileserver-dev-static-ip. See README.md.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tiles
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: h3-tileserver
+  namespace: tiles
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: h3-tileserver
+  namespace: tiles
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: h3-tileserver
+  template:
+    metadata:
+      labels:
+        app: h3-tileserver
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-request: 50m
+        gke-gcsfuse/memory-request: 128Mi
+        gke-gcsfuse/ephemeral-storage-request: 5Gi
+    spec:
+      serviceAccountName: h3-tileserver
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: tileserver
+          # Built by image/build.sh.
+          image: us-central1-docker.pkg.dev/climateiq/frontend-artifacts/h3-tileserver:2264416-passthrough
+          args:
+            - -c
+            - /tiles/releases/$(TILESERVER_RELEASE)-config.json
+            - -p
+            - "8080"
+          env:
+            # tileserver/releases/<release>-config.json in the bucket.
+            - name: TILESERVER_RELEASE
+              value: bootstrap
+            # Hosts that get absolute URLs in TileJSON; others get path-only URLs.
+            - name: TILESERVER_GL_ALLOWED_HOSTS
+              value: tilesdev.climateiq.org
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 512m
+              memory: 1Gi
+              ephemeral-storage: 1Gi
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              ephemeral-storage: 1Gi
+          volumeMounts:
+            - name: tiles
+              mountPath: /tiles
+              readOnly: true
+      volumes:
+        - name: tiles
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            readOnly: true
+            volumeAttributes:
+              bucketName: climateiq-h3-tiles
+              mountOptions: "only-dir=tileserver,implicit-dirs,uid=1000,gid=1000,file-cache:cache-file-for-range-read:true"
+              fileCacheCapacity: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: h3-tileserver
+  namespace: tiles
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+spec:
+  type: NodePort
+  selector:
+    app: h3-tileserver
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: h3-tileserver-ingress
+  namespace: tiles
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: h3-tileserver-dev-static-ip
+    # Uncomment with managed-certificate.yaml once DNS points at the IP.
+    # networking.gke.io/managed-certificates: h3-tileserver-cert
+spec:
+  defaultBackend:
+    service:
+      name: h3-tileserver
+      port:
+        number: 80

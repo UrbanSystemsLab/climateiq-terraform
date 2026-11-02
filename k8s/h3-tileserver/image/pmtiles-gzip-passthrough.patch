@@ -1,0 +1,133 @@
+diff --git a/src/pmtiles_adapter.js b/src/pmtiles_adapter.js
+index 88e5cd9..f7a6321 100644
+--- a/src/pmtiles_adapter.js
++++ b/src/pmtiles_adapter.js
+@@ -1,5 +1,13 @@
+ import fs from 'node:fs';
+-import { PMTiles, FetchSource, EtagMismatch } from 'pmtiles';
++import {
++  PMTiles,
++  FetchSource,
++  EtagMismatch,
++  Compression,
++  TileType,
++  findTile,
++  zxyToTileId,
++} from 'pmtiles';
+ import { isValidHttpUrl, isS3Url } from './utils.js';
+ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+ import { fromIni } from '@aws-sdk/credential-provider-ini';
+@@ -521,8 +529,72 @@ export async function getPMtilesInfo(pmtiles, inputFile, maxRetries = 3) {
+   );
+ }
+ 
++/**
++ * Reads a tile's bytes as stored in the archive, without decompressing them.
++ * Mirrors PMTiles.getZxy, which decompresses tile data.
++ * @param {PMTiles} pmtiles - The PMTiles instance.
++ * @param {number} z - The zoom level.
++ * @param {number} x - The x coordinate of the tile.
++ * @param {number} y - The y coordinate of the tile.
++ * @returns {Promise<ArrayBuffer|undefined>} - The stored tile bytes, or undefined if the tile is missing.
++ */
++async function getStoredZxyAttempt(pmtiles, z, x, y) {
++  const tileId = zxyToTileId(z, x, y);
++  const header = await pmtiles.cache.getHeader(pmtiles.source);
++  if (z < header.minZoom || z > header.maxZoom) {
++    return undefined;
++  }
++  let offset = header.rootDirectoryOffset;
++  let length = header.rootDirectoryLength;
++  for (let depth = 0; depth <= 3; depth++) {
++    const directory = await pmtiles.cache.getDirectory(
++      pmtiles.source,
++      offset,
++      length,
++      header,
++    );
++    const entry = findTile(directory, tileId);
++    if (!entry) {
++      return undefined;
++    }
++    if (entry.runLength > 0) {
++      const resp = await pmtiles.source.getBytes(
++        header.tileDataOffset + entry.offset,
++        entry.length,
++        undefined,
++        header.etag,
++      );
++      return resp.data;
++    }
++    offset = header.leafDirectoryOffset + entry.offset;
++    length = entry.length;
++  }
++  throw new Error('Maximum directory depth exceeded');
++}
++
++/**
++ * Reads a tile's stored bytes, retrying once after an ETag mismatch as PMTiles.getZxy does.
++ * @param {PMTiles} pmtiles - The PMTiles instance.
++ * @param {number} z - The zoom level.
++ * @param {number} x - The x coordinate of the tile.
++ * @param {number} y - The y coordinate of the tile.
++ * @returns {Promise<ArrayBuffer|undefined>} - The stored tile bytes, or undefined if the tile is missing.
++ */
++async function getStoredZxy(pmtiles, z, x, y) {
++  try {
++    return await getStoredZxyAttempt(pmtiles, z, x, y);
++  } catch (error) {
++    if (error instanceof EtagMismatch) {
++      await pmtiles.cache.invalidate(pmtiles.source);
++      return await getStoredZxyAttempt(pmtiles, z, x, y);
++    }
++    throw error;
++  }
++}
++
+ /**
+  * Fetches a tile from a PMTiles archive with retry logic for rate limiting and error handling.
++ * Gzipped vector tiles are returned still gzipped, so they can be served without recompressing.
+  * @param {PMTiles} pmtiles - The PMTiles instance.
+  * @param {number} z - The zoom level.
+  * @param {number} x - The x coordinate of the tile.
+@@ -536,15 +608,20 @@ export async function getPMtilesTile(pmtiles, z, x, y, maxRetries = 3) {
+ 
+   for (let attempt = 0; attempt < maxRetries; attempt++) {
+     try {
+-      let zxyTile = await pmtiles.getZxy(z, x, y);
+-
+-      if (zxyTile && zxyTile.data) {
+-        zxyTile = Buffer.from(zxyTile.data);
++      let data;
++      if (
++        header.tileType === TileType.Mvt &&
++        header.tileCompression === Compression.Gzip
++      ) {
++        data = await getStoredZxy(pmtiles, z, x, y);
+       } else {
+-        zxyTile = undefined;
++        data = (await pmtiles.getZxy(z, x, y))?.data;
+       }
+ 
+-      return { data: zxyTile, header: tileType.header };
++      return {
++        data: data ? Buffer.from(data) : undefined,
++        header: tileType.header,
++      };
+     } catch (error) {
+       if (
+         error.message &&
+diff --git a/src/serve_data.js b/src/serve_data.js
+index dda54f7..11ac1c0 100644
+--- a/src/serve_data.js
++++ b/src/serve_data.js
+@@ -160,7 +160,8 @@ export const serve_data = {
+         headers['Content-Type'] = 'application/x-protobuf';
+       } else if (format === 'geojson') {
+         headers['Content-Type'] = 'application/json';
+-        const tile = new VectorTile(new PbfReader(data));
++        // PbfReader needs a buffer that starts at offset 0.
++        const tile = new VectorTile(new PbfReader(new Uint8Array(data)));
+         const geojson = {
+           type: 'FeatureCollection',
+           features: [],
